@@ -1,0 +1,40 @@
+# One command brings up the whole system:   docker compose up --build
+# Open http://localhost:8080  (put an https reverse proxy in front for real use).
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-mannus}
+      MYSQL_USER: ${MYSQL_USER:-mannus}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes: ["mysql-data:/var/lib/mysql"]
+    healthcheck: { test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"], interval: 5s, timeout: 3s, retries: 30 }
+
+  api:               # Flask: students, classes, attendance (fees, reports, PDF in stage 2)
+    build: { context: ., dockerfile: api/Dockerfile }
+    restart: unless-stopped
+    env_file: .env
+    environment: { STATIC_DIR: /app/web-dist }
+    depends_on: { mysql: { condition: service_healthy } }
+    ports: ["8080:8000"]
+    volumes: ["reports-data:/data/reports"]
+
+  zoom-sync:         # reads Zoom attendance for finished classes every 5 minutes
+    build: { context: ., dockerfile: api/Dockerfile }
+    restart: unless-stopped
+    env_file: .env
+    command: ["sh", "-c", "while true; do flask --app wsgi sync-zoom; sleep 300; done"]
+    depends_on: { mysql: { condition: service_healthy } }
+
+  integrations:      # Node.js + TypeScript: WhatsApp, YouTube, Instagram, video (stages 3-4)
+    build: { context: integrations }
+    restart: unless-stopped
+    env_file: .env
+    depends_on: { mysql: { condition: service_healthy } }
+    expose: ["5100"]
+    volumes: ["reports-data:/data/reports", "media-data:/data/media"]
+
+volumes: { mysql-data: {}, reports-data: {}, media-data: {} }

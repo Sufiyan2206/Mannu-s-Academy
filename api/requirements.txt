@@ -1,0 +1,12 @@
+Flask>=3.0
+flask-cors>=4.0
+SQLAlchemy>=2.0
+PyMySQL>=1.1
+cryptography>=42
+PyJWT>=2.8
+bcrypt>=4.1
+reportlab>=4.0
+requests>=2.31
+python-dotenv>=1.0
+gunicorn>=22
+pytest>=8
