@@ -1,4 +1,4 @@
-// Accounts kept in your own database (auth.users): bcrypt password hashes and signed tokens (JWT).
+// Accounts kept in your own database (accounts.users): bcrypt password hashes and signed tokens (JWT).
 import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
 import { pool } from './pg';
@@ -36,7 +36,7 @@ const note = (id: string, ok: boolean) => {
 export async function checkLogin(email: string, password: string, who: string): Promise<string | null> {
   const id = who + '|' + email.toLowerCase();
   if (throttled(id)) return null;
-  const { rows } = await pool().query('select id, password_hash, banned from auth.users where lower(email) = lower($1)', [email.trim()]);
+  const { rows } = await pool().query('select id, password_hash, banned from accounts.users where lower(email) = lower($1)', [email.trim()]);
   const u = rows[0];
   // compare against something even when the user does not exist, so timing does not reveal which emails are real
   const ok = await bcrypt.compare(password, u?.password_hash || '$2a$11$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalidi');
@@ -48,8 +48,8 @@ export async function checkLogin(email: string, password: string, who: string): 
 export async function changePassword(userId: string, current: string | null, next: string): Promise<void> {
   if (next.length < 8) throw new Error('The new password must be at least 8 characters.');
   if (current !== null) {
-    const { rows } = await pool().query('select password_hash from auth.users where id = $1', [userId]);
+    const { rows } = await pool().query('select password_hash from accounts.users where id = $1', [userId]);
     if (!rows[0] || !(await bcrypt.compare(current, rows[0].password_hash))) throw new Error('The current password is not right.');
   }
-  await pool().query('update auth.users set password_hash = $2 where id = $1', [userId, await hashPassword(next)]);
+  await pool().query('update accounts.users set password_hash = $2 where id = $1', [userId, await hashPassword(next)]);
 }

@@ -5,12 +5,12 @@
 -- ---------------------------------------------------------------- helpers
 create function public.is_staff() returns boolean
 language sql stable security definer set search_path = public as $$
-  select exists (select 1 from public.profiles p where p.id = auth.uid() and p.active)
+  select exists (select 1 from public.profiles p where p.id = accounts.uid() and p.active)
 $$;
 
 create function public.is_admin() returns boolean
 language sql stable security definer set search_path = public as $$
-  select exists (select 1 from public.profiles p where p.id = auth.uid() and p.active and p.role = 'admin')
+  select exists (select 1 from public.profiles p where p.id = accounts.uid() and p.active and p.role = 'admin')
 $$;
 
 revoke all on function public.is_staff(), public.is_admin() from public;
@@ -43,7 +43,7 @@ alter table public.recordings          enable row level security;
 alter table public.integrations        enable row level security;   -- no policy: service role only
 
 -- people
-create policy profiles_read   on public.profiles for select using (public.is_staff() or id = auth.uid());
+create policy profiles_read   on public.profiles for select using (public.is_staff() or id = accounts.uid());
 create policy profiles_admin  on public.profiles for update using (public.is_admin()) with check (public.is_admin());
 
 create policy settings_read   on public.settings for select using (public.is_staff());
@@ -81,21 +81,21 @@ create policy messages_add  on public.messages for insert with check (public.is_
 
 -- resources: everyone on staff adds; only the owner or an admin changes; removed items are hidden from teachers
 create policy resources_read on public.resources for select
-  using (public.is_admin() or (public.is_staff() and (status = 'active' or by_id = auth.uid())));
-create policy resources_add  on public.resources for insert with check (public.is_staff() and by_id = auth.uid());
+  using (public.is_admin() or (public.is_staff() and (status = 'active' or by_id = accounts.uid())));
+create policy resources_add  on public.resources for insert with check (public.is_staff() and by_id = accounts.uid());
 create policy resources_edit on public.resources for update
-  using (public.is_admin() or (public.is_staff() and by_id = auth.uid()))
-  with check (public.is_admin() or (public.is_staff() and by_id = auth.uid()));
+  using (public.is_admin() or (public.is_staff() and by_id = accounts.uid()))
+  with check (public.is_admin() or (public.is_staff() and by_id = accounts.uid()));
 create policy resources_del  on public.resources for delete using (public.is_admin());
 create policy res_hist_read  on public.resource_history for select using (public.is_admin());
 create policy res_hist_add   on public.resource_history for insert with check (public.is_staff());
 
 -- reels: teachers write drafts; approvals, publishing and consent are admin-only
 create policy reels_read     on public.reels for select using (public.is_staff());
-create policy reels_add      on public.reels for insert with check (public.is_staff() and by_id = auth.uid());
+create policy reels_add      on public.reels for insert with check (public.is_staff() and by_id = accounts.uid());
 create policy reels_edit     on public.reels for update
-  using (public.is_admin() or (public.is_staff() and by_id = auth.uid()))
-  with check (public.is_admin() or (public.is_staff() and by_id = auth.uid()));
+  using (public.is_admin() or (public.is_staff() and by_id = accounts.uid()))
+  with check (public.is_admin() or (public.is_staff() and by_id = accounts.uid()));
 create policy reels_del      on public.reels for delete using (public.is_admin());
 create policy reel_dec_read  on public.reel_decisions for select using (public.is_staff());
 create policy reel_dec_admin on public.reel_decisions for all using (public.is_admin()) with check (public.is_admin());
@@ -107,7 +107,7 @@ create policy consent_log_admin on public.consent_log for all using (public.is_a
 
 -- recordings: staff add and watch; changes after that happen in the pipeline (service role) or by an admin
 create policy recordings_read  on public.recordings for select using (public.is_staff());
-create policy recordings_add   on public.recordings for insert with check (public.is_staff() and by_id = auth.uid());
+create policy recordings_add   on public.recordings for insert with check (public.is_staff() and by_id = accounts.uid());
 create policy recordings_admin on public.recordings for update using (public.is_admin()) with check (public.is_admin());
 create policy recordings_del   on public.recordings for delete using (public.is_admin());
 

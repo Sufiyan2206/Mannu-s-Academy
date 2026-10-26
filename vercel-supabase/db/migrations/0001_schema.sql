@@ -5,7 +5,7 @@
 create type public.app_role as enum ('admin', 'teacher');
 
 create table public.profiles (
-  id          uuid primary key references auth.users (id) on delete cascade,
+  id          uuid primary key references accounts.users (id) on delete cascade,
   full_name   text        not null default '',
   email       text        not null default '',
   role        public.app_role not null default 'teacher',
@@ -27,7 +27,7 @@ begin
   return new;
 end $$;
 
-create trigger on_auth_user_created after insert on auth.users
+create trigger on_auth_user_created after insert on accounts.users
   for each row execute function public.handle_new_user();
 
 create table public.settings (
@@ -250,7 +250,7 @@ create table public.resources (
   tags         text[] not null default '{}',
   class_id     uuid references public.classes (id) on delete set null,
   status       text not null default 'active' check (status in ('active', 'removed')),
-  by_id        uuid references auth.users (id) on delete set null,
+  by_id        uuid references accounts.users (id) on delete set null,
   by_name      text not null default '',
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now(),
@@ -288,7 +288,7 @@ create table public.reels (
   submitted_at timestamptz,
   discarded    boolean not null default false,
   recording_id uuid,
-  by_id        uuid references auth.users (id) on delete set null,
+  by_id        uuid references accounts.users (id) on delete set null,
   by_name      text not null default '',
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
@@ -378,7 +378,7 @@ create table public.recordings (
   locked_until     timestamptz,
   steps            jsonb not null default '[]',
   original_deleted boolean not null default false,
-  by_id            uuid references auth.users (id) on delete set null,
+  by_id            uuid references accounts.users (id) on delete set null,
   by_name          text not null default '',
   created_at       timestamptz not null default now(),
   updated_at       timestamptz not null default now()

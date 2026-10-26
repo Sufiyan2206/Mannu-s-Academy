@@ -104,6 +104,17 @@ The app is a normal Node server, so anything that runs Node works. A good fit is
 5. **OCI network**: open ports 80 and 443 in the VCN security list **and** in the VM firewall (`sudo iptables -I INPUT -p tcp --dport 443 -j ACCEPT`, or `ufw`). Keep Postgres closed to the internet.
 6. **Disk**: recordings are big. Put `STORAGE_DIR` on a block volume with room (the app deletes each original a few days after publishing — Setup → Video pipeline). Back up the database (`pg_dump`) and, if you want to keep them, the clips.
 
+## Quick online test: Vercel + a Supabase database (optional)
+
+Supabase is used **only as a hosted PostgreSQL** here (the app keeps its own login and API). The migrations use their own `accounts` schema, so they never touch Supabase's `auth` schema.
+
+1. Supabase → your project → **Connect** → copy the **Transaction pooler** connection string (port 6543) and put your database password in it.
+2. On your PC, in this folder, put that string in `.env.local` as `DATABASE_URL`, add `DATABASE_SSL=1`, then run `npm run migrate` and `npm run create-admin -- you@example.com "Password123" "Name"`.
+   (Or paste the three files in `db/migrations/` into Supabase's SQL editor, in order, then run the `create-admin` command.)
+3. Vercel → Settings → Environment Variables: `DATABASE_URL`, `DATABASE_SSL=1`, `DATABASE_POOL=3`, `JWT_SECRET` (random, 32+ characters), `NEXT_PUBLIC_SITE_URL=https://your-app.vercel.app`, `PIPELINE_WORKER=0`. Redeploy.
+
+Everything except the video pipeline works there. **Recordings, the YouTube upload and the 60-second Instagram clip need a server with a disk and a background worker (your OCI machine)** — Vercel functions have neither.
+
 ## Connect YouTube and Instagram
 
 ### YouTube

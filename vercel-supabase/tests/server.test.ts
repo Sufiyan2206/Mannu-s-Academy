@@ -31,8 +31,8 @@ beforeAll(async () => {
   m = { sql: await import('../src/lib/server/sqlplan'), auth: await import('../src/lib/server/auth'), adm: await import('../src/lib/server/admin'), env: await import('../src/lib/server/env') };
   const { pool } = await import('../src/lib/server/pg');
   const h = await m.auth.hashPassword('correct horse battery');
-  A = (await pool().query(`insert into auth.users (email, password_hash, raw_user_meta_data) values ('Ada@Example.com', $1, '{"full_name":"Ada Admin"}') returning id`, [h])).rows[0].id;
-  T = (await pool().query(`insert into auth.users (email, password_hash) values ('tess@example.com', $1) returning id`, [h])).rows[0].id;
+  A = (await pool().query(`insert into accounts.users (email, password_hash, raw_user_meta_data) values ('Ada@Example.com', $1, '{"full_name":"Ada Admin"}') returning id`, [h])).rows[0].id;
+  T = (await pool().query(`insert into accounts.users (email, password_hash) values ('tess@example.com', $1) returning id`, [h])).rows[0].id;
 });
 
 afterAll(async () => {
@@ -58,9 +58,9 @@ describe('accounts', () => {
     expect(await m.auth.checkLogin('ada@example.com', 'wrong', '1.1.1.1')).toBeNull();
     expect(await m.auth.checkLogin('nobody@example.com', 'x', '1.1.1.1')).toBeNull();
     const { pool } = await import('../src/lib/server/pg');
-    await pool().query('update auth.users set banned = true where id = $1', [T]);
+    await pool().query('update accounts.users set banned = true where id = $1', [T]);
     expect(await m.auth.checkLogin('tess@example.com', 'correct horse battery', '2.2.2.2')).toBeNull();
-    await pool().query('update auth.users set banned = false where id = $1', [T]);
+    await pool().query('update accounts.users set banned = false where id = $1', [T]);
     expect(await m.auth.checkLogin('tess@example.com', 'correct horse battery', '2.2.2.2')).toBe(T);
   });
   guard('too many wrong passwords from one address are held up', async () => {

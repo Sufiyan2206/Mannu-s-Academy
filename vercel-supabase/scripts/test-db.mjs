@@ -45,8 +45,8 @@ try {
     await db.query(fs.readFileSync(path.join(root, f), 'utf8'));
 
   // accounts: the first one becomes admin
-  const A = (await db.query(`insert into auth.users (email, password_hash, raw_user_meta_data) values ('admin@x.com', 'x', '{"full_name":"Ada Admin"}') returning id`)).rows[0].id;
-  const T = (await db.query(`insert into auth.users (email, password_hash) values ('teach@x.com', 'x') returning id`)).rows[0].id;
+  const A = (await db.query(`insert into accounts.users (email, password_hash, raw_user_meta_data) values ('admin@x.com', 'x', '{"full_name":"Ada Admin"}') returning id`)).rows[0].id;
+  const T = (await db.query(`insert into accounts.users (email, password_hash) values ('teach@x.com', 'x') returning id`)).rows[0].id;
   const { rows: profiles } = await db.query('select id, role, full_name from public.profiles order by created_at');
 
   console.log('Accounts');

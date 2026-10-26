@@ -13,7 +13,8 @@
     "dev:mock": "node scripts/dev-mock.mjs",
     "migrate": "node scripts/migrate.mjs",
     "create-admin": "node scripts/create-admin.mjs",
-    "reset-password": "node scripts/reset-password.mjs"
+    "reset-password": "node scripts/reset-password.mjs",
+    "reset-db": "node scripts/reset-db.mjs"
   },
   "engines": {
     "node": ">=20"

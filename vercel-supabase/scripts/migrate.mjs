@@ -10,9 +10,10 @@ loadEnv();
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'db', 'migrations');
 if (!process.env.DATABASE_URL) { console.error('DATABASE_URL is not set. Put it in .env.local, for example\n  DATABASE_URL=postgres://postgres:YOURPASSWORD@127.0.0.1:5432/mannu_academy'); process.exit(1); }
 
-const db = new pg.Client({ connectionString: process.env.DATABASE_URL });
+const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_SSL === '1' ? { rejectUnauthorized: false } : undefined });
 await db.connect();
 await db.query('create table if not exists public.schema_migrations (name text primary key, applied_at timestamptz not null default now())');
+await db.query('alter table public.schema_migrations enable row level security');   // no policy: nobody but the owner can read it
 const done = new Set((await db.query('select name from public.schema_migrations')).rows.map(r => r.name));
 let n = 0;
 for (const f of fs.readdirSync(dir).filter(x => x.endsWith('.sql')).sort()) {

@@ -26,7 +26,7 @@ export async function requireUser(req: Request, adminOnly = false, tokenOverride
   const uid = await verifyToken(token);
   if (!uid) throw new HttpError(401, 'Your session has expired. Sign in again.');
   const { rows } = await pool().query(
-    `select p.*, u.banned from public.profiles p join auth.users u on u.id = p.id where p.id = $1`, [uid]);
+    `select p.*, u.banned from public.profiles p join accounts.users u on u.id = p.id where p.id = $1`, [uid]);
   const p = rows[0];
   if (!p || !p.active || p.banned) throw new HttpError(403, 'This account has no access.');
   if (adminOnly && p.role !== 'admin') throw new HttpError(403, 'Only admins can do this.');
